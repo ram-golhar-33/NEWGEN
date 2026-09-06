@@ -18,21 +18,6 @@ data "aws_subnets" "all_subnets" {
 }
 
 
-# PUBLIC SUBNET
-
-data "aws_subnet" "public_subnet" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.my_vpc.id]
-  }
-
-  filter {
-    name   = "tag:Name"
-    values = ["Public-Subnet"]
-  }
-}
-
-
 # OUTPUTS
 
 output "vpc_id" {
@@ -47,6 +32,7 @@ output "all_subnet_ids" {
   value = data.aws_subnets.all_subnets.ids
 }
 
-output "public_subnet_id" {
-  value = data.aws_subnet.public_subnet.id
+
+output "first_subnet_id" {
+  value = data.aws_subnets.all_subnets.ids[0]
 }
