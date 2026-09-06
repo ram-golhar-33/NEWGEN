@@ -8,9 +8,19 @@ data "aws_vpc" "my_vpc" {
 }
 
 
-# Subnet
+# ALL SUBNETS
 
-data "aws_subnet" "my_subnet" {
+data "aws_subnets" "all_subnets" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.my_vpc.id]
+  }
+}
+
+
+# PUBLIC SUBNET
+
+data "aws_subnet" "public_subnet" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.my_vpc.id]
@@ -23,7 +33,7 @@ data "aws_subnet" "my_subnet" {
 }
 
 
-# Outputs
+# OUTPUTS
 
 output "vpc_id" {
   value = data.aws_vpc.my_vpc.id
@@ -33,6 +43,10 @@ output "vpc_cidr" {
   value = data.aws_vpc.my_vpc.cidr_block
 }
 
-output "subnet_id" {
-  value = data.aws_subnet.my_subnet.id
+output "all_subnet_ids" {
+  value = data.aws_subnets.all_subnets.ids
+}
+
+output "public_subnet_id" {
+  value = data.aws_subnet.public_subnet.id
 }
