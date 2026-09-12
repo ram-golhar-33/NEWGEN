@@ -1,38 +1,125 @@
+# ==========================================
 # VPC
+# ==========================================
 
-data "aws_vpc" "my_vpc" {
-  filter {
-    name   = "tag:Name"
-    values = ["MY-VPC"]
+resource "aws_vpc" "main" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "MY-VPC"
   }
 }
 
 
-# ALL SUBNETS
+# ==========================================
+# PUBLIC SUBNET
+# ==========================================
 
-data "aws_subnets" "all_subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.my_vpc.id]
+resource "aws_subnet" "public" {
+  vpc_id = aws_vpc.main.id
+
+  cidr_block = "10.0.1.0/24"
+
+  availability_zone = "us-east-1a"
+
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "Public-Subnet"
   }
 }
 
 
-# OUTPUTS
+# ==========================================
+# PRIVATE SUBNET
+# ==========================================
 
-output "vpc_id" {
-  value = data.aws_vpc.my_vpc.id
+resource "aws_subnet" "private" {
+  vpc_id = aws_vpc.main.id
+
+  cidr_block = "10.0.2.0/24"
+
+  availability_zone = "us-east-1b"
+
+  tags = {
+    Name = "Private-Subnet"
+  }
 }
 
-output "vpc_cidr" {
-  value = data.aws_vpc.my_vpc.cidr_block
+
+# ==========================================
+# INTERNET GATEWAY
+# ATTACHED TO VPC
+# ==========================================
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "MY-IGW"
+  }
 }
 
-output "all_subnet_ids" {
-  value = data.aws_subnets.all_subnets.ids
+
+# ==========================================
+# PUBLIC ROUTE TABLE
+# ==========================================
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "Public-Route-Table"
+  }
 }
 
 
-output "first_subnet_id" {
-  value = data.aws_subnets.all_subnets.ids[0]
+# ==========================================
+# PUBLIC ROUTE
+# INTERNET GATEWAY
+# ==========================================
+
+resource "aws_route" "public_internet" {
+  route_table_id = aws_route_table.public.id
+
+  destination_cidr_block = "0.0.0.0/0"
+
+  gateway_id = aws_internet_gateway.igw.id
+}
+
+
+# ==========================================
+# PUBLIC SUBNET
+# ROUTE TABLE ASSOCIATION
+# ==========================================
+
+resource "aws_route_table_association" "public" {
+  subnet_id = aws_subnet.public.id
+
+  route_table_id = aws_route_table.public.id
+}
+
+
+# ==========================================
+# PRIVATE ROUTE TABLE
+# ==========================================
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "Private-Route-Table"
+  }
+}
+
+
+# ==========================================
+# PRIVATE SUBNET
+# ROUTE TABLE ASSOCIATION
+# ==========================================
+
+resource "aws_route_table_association" "private" {
+  subnet_id = aws_subnet.private.id
+
+  route_table_id = aws_route_table.private.id
 }
